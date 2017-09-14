@@ -15,13 +15,40 @@
 
 <p><span class="bold">Downsample status:</span>
     {{ channel_props.downsample_status }}
-    <ul>
     {% if channel_props.downsample_status == 'NOT_DOWNSAMPLED' %}
-        <li><a href="{% url 'synaptogram:start_downsample' coll exp channel %}">Start Downsample Job</a></li>
+        <button onclick="myFunction()">Downsample</button>
+
+        <span id="downsample"></span>
+
+        <script>
+        function myFunction() {
+            var txt;
+            if (confirm("Downsampling a channel can take a long time. We do not recommend downsampling more than one channel at a time.") == true) {
+                txt = "<a href=\"{% url 'synaptogram:start_downsample' coll exp channel %}\">Start Downsample Job</a>";
+            } else {
+                txt = "";
+            }
+            document.getElementById("downsample").innerHTML = txt;
+        }
+        </script>
+        
     {% elif channel_props.downsample_status == 'IN_PROGRESS' %}
-        <li><a href="{% url 'synaptogram:stop_downsample' coll exp channel %}">Stop Downsample Job</a></li>
+            <button onclick="myFunction()">Cancel downsample job</button>
+    
+            <span id="downsample"></span>
+    
+            <script>
+            function myFunction() {
+                var txt;
+                if (confirm("Canceling a downsample job will reset it's status to NOT_DOWNSAMPLED. Downsampling will have to be restarted from the beginning.") == true) {
+                    txt = "<a href=\"{% url 'synaptogram:stop_downsample' coll exp channel %}\">Stop Downsample Job</a>";
+                } else {
+                    txt = "";
+                }
+                document.getElementById("downsample").innerHTML = txt;
+            }
+            </script>
     {% endif %}
-    </ul>
 </p>
 
 <p><span class="bold">Permissions:</span>
