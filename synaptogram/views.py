@@ -281,12 +281,17 @@ def sgram(request):
 @login_required
 def sgram_from_ndviz(request):
     url = request.GET.get('url')
-    coll, exp, x, y, z = parse_ndviz_url(request, url)
+    coll, exp = parse_ndviz_url(request, url)
 
     if coll == 'incorrect source':
         return redirect('synaptogram:coll_list')
     elif coll == 'authentication failure':
         return redirect('/openid/openid/KeyCloak')
+
+    x = ':'.join(request.GET.get('xextent').split(','))
+    y = ':'.join(request.GET.get('yextent').split(','))
+    coords = request.GET.get('coords').split(',')
+    z = ':'.join((coords[-1], str(int(coords[-1]) + 1)))
 
     # go to form to let user decide what they want to do
     pass_params_d = {'x': x, 'y': y, 'z': z}
@@ -692,38 +697,11 @@ def parse_ndviz_url(request, url):
     #"https://viz-dev.boss.neurodata.io/#!{'layers':{'CR1_2ndA':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/kristina15/image/CR1_2ndA?window=0,10000'}}_'navigation':{'pose':{'position':{'voxelSize':[100_100_70]_'voxelCoordinates':[657.4783325195312_1069.4876708984375_11]}}_'zoomFactor':69.80685914923684}}"
     split_url = url.split('/')
     if split_url[2] != 'viz-dev.boss.neurodata.io' and split_url[2] != 'viz.boss.neurodata.io':
-        return 'incorrect source', None, None, None, None
+        return 'incorrect source', None
     coll = split_url[8]
     exp = split_url[9]
 
-    # incorporate the zoom factor when generating synaptogram from bookmarklet
-    # not currently implemented
-    match_zoom = re.search(r"(?<=zoomFactor':).*?(?=})", url)
-    zoom = int(float(match_zoom.group()))
-
-    match_xyz_voxel = re.search(r"(?<=voxelSize':\[).*?(?=\])", url)
-    xyz_voxel = match_xyz_voxel.group()
-    xyz_voxel_float = xyz_voxel.split('_')
-
-    match_xyz = re.search(r"(?<=voxelCoordinates':\[).*?(?=\]}}_'zoom)", url)
-    xyz = match_xyz.group()
-    xyz_float = xyz.split('_')
-    xyz_int = [int(float(p)) for p in xyz_float]
-
-    coord_frame = get_coordinate_frame(request, coll, exp)
-    if coord_frame == 'authentication failure':
-        return coord_frame, None, None, None, None
-    # convert the units from ndviz to boss units
-    xyz_int = ndviz_units_to_boss(coord_frame, xyz_voxel_float, xyz_int)
-
-    # creates the string param that using now - these will be integer lists at
-    # some point
-    x, y, z = [(str(p - 5) + ':' + str(p + 5)) for p in xyz_int]
-
-    return coll, exp, x, y, z
-
-# we need to do this in case the user specified wrong voxel units in the
-# ndviz url
+    return coll, exp
 
 
 def ndviz_units_to_boss(coord_frame, ndviz_voxel, xyz_int):
