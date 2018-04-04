@@ -309,6 +309,8 @@ def channel_detail(request, coll, exp, channel):
     boss_remote = request.session['boss_remote']
     ch_info = boss_remote.get_ch_info(coll, exp, channel)
     ch_perms = boss_remote.get_permissions(coll, exp, channel)
+    downsample_status = boss_remote.get_downsample_status(coll, exp, channel)
+    ch_info['downsample_status'] = downsample_status['status']
     perm_sets = ch_perms['permission-sets']
 
     ndviz_url, _ = ret_ndviz_urls(request, coll, exp, [channel])

@@ -171,3 +171,8 @@ class BossRemote:
     def stop_downsample(self, coll, exp, ch):
         del_url = '/'.join(('downsample', coll, exp, ch))
         self.delete(del_url)
+
+    def get_downsample_status(self, coll, exp, ch):
+        get_url = '/'.join(('downsample', coll, exp, ch))
+        r = self.get(get_url, {'Accept': 'application/json'})
+        return r.json()
