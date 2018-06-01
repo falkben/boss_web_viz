@@ -311,6 +311,15 @@ def channel_detail(request, coll, exp, channel):
     ch_perms = boss_remote.get_permissions(coll, exp, channel)
     downsample_status = boss_remote.get_downsample_status(coll, exp, channel)
     ch_info['downsample_status'] = downsample_status['status']
+
+    keys = ['min_I', 'max_I']
+    for k in keys:
+        val = boss_remote.get_ch_metadata_key(coll, exp, channel, k)
+        if val:
+            ch_info[k] = val
+        else:
+            break
+
     perm_sets = ch_perms['permission-sets']
 
     ndviz_url, _ = ret_ndviz_urls(request, coll, exp, [channel])
@@ -397,7 +406,11 @@ def get_voxel_size(coord_frame):
 
 def ret_ndviz_channel_part(boss_url, ch_metadata, coll, exp, ch, ch_indx=0):
     if ch_metadata['datatype'] == 'uint16':
-        window = 'window=0,10000'
+        if 'min_I' in ch_metadata:  # we have max/min values as BOSS metadata
+            window = 'window={},{}'.format(
+                ch_metadata['min_I'], ch_metadata['max_I'])
+        else:
+            window = 'window=0,10000'
     else:
         window = ''
     if ch_metadata['type'] == 'image':
@@ -440,6 +453,15 @@ def ret_ndviz_urls(request, coll, exp,
     ch_viz_links = []
     for ch_indx, ch in enumerate(channels):
         ch_info = boss_remote.get_ch_info(coll, exp, ch)
+
+        keys = ['min_I', 'max_I']
+        for k in keys:
+            val = boss_remote.get_ch_metadata_key(coll, exp, ch, k)
+            if val:
+                ch_info[k] = val
+            else:
+                break
+
         ch_link = ret_ndviz_channel_part(
             boss_url, ch_info, coll, exp, ch, ch_indx)
         ch_viz_links.append(ch_link)

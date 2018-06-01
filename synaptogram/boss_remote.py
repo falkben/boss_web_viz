@@ -147,7 +147,7 @@ class BossRemote:
         keys = resp['keys']
         metadata = {}
         for key in keys:
-            metadata[key] = self.get_exp_metadata_key(coll, exp, key)['value']
+            metadata[key] = self.get_exp_metadata_key(coll, exp, key)
 
         return metadata
 
@@ -155,7 +155,16 @@ class BossRemote:
         # get metadata value for key
         get_url = 'meta/{}/{}/?key={}'.format(coll, exp, key)
         r = self.get(get_url, {'Accept': 'application/json'})
-        return r.json()
+        return r.json()['value']
+
+    def get_ch_metadata_key(self, coll, exp, ch, key):
+        # get metadata value for key
+        get_url = 'meta/{}/{}/{}/?key={}'.format(coll, exp, ch, key)
+        try:
+            r = self.get(get_url, {'Accept': 'application/json'})
+            return r.json()['value']
+        except requests.exceptions.HTTPError as e:
+            return None
 
     def get_permissions(self, coll, exp=None, ch=None):
         params = '&'.join(

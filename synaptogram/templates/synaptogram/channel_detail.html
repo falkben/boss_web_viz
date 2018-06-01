@@ -29,6 +29,14 @@
     {{channel_props.datatype}}
 </p>
 
+{% if channel_props.min_I %}
+<p>
+    <strong>Image Min/Max Intensities:</strong><br>
+    Min: {{channel_props.min_I}} <br>
+    Max: {{channel_props.max_I}}
+</p>
+{% endif %}
+
 <p><strong>NDViz:</strong>
     <a href="{{ ndviz_url }}" target="_blank">link</a>
 </p>
