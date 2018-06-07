@@ -38,7 +38,7 @@
 {% endif %}
 
 <p><strong>NDViz:</strong>
-    <a href="{{ ndviz_url }}" target="_blank">link</a>
+    <a href="{{ ndviz_url }}" target="_blank"><img id="eye" src="{% static 'images/eye.svg' %}"></a>
 </p>
 
 
@@ -84,7 +84,8 @@
 <ul>
     {% for p in permissions %}
         <li>
-            <strong>Group:</strong> {{p.group}} (<a href="https://api.boss.neurodata.io/v1/mgmt/group/{{p.group}}" target="_blank">manage</a>)<br>
+            <strong>Group:</strong> {{p.group}} <a href="https://api.boss.neurodata.io/v1/mgmt/group/{{p.group}}" target="_blank">
+                <img id="manage" src="{% static 'images/settings.png' %}"></a><br>
             <strong>Permissions:</strong>
             <ul>
             {% for p_g in p.permissions %}

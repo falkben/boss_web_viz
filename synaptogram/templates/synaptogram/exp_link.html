@@ -1,5 +1,6 @@
 <p><strong>Experiment:</strong>
 <!-- https://api.boss.neurodata.io/v1/mgmt/resources/collman/collman14v2 -->
 <a href="{% url 'synaptogram:cutout' coll exp %}">{{ exp }}</a>
-(<a href="https://api.boss.neurodata.io/v1/mgmt/resources/{{coll}}/{{exp}}" target="blank">manage</a>)
+<a href="https://api.boss.neurodata.io/v1/mgmt/resources/{{coll}}/{{exp}}" target="blank">
+    <img id="manage" src="{% static 'images/settings.png' %}"></a>
 </p>

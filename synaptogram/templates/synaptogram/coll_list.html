@@ -12,7 +12,7 @@
 {% for coll in collections %}
 <li>
     <a href="{% url 'synaptogram:exp_list' coll %}">{{coll}}</a>
-    (<a href="https://api.boss.neurodata.io/v1/mgmt/resources/{{coll}}">manage</a>)
+    <a href="https://api.boss.neurodata.io/v1/mgmt/resources/{{coll}}"><img id="manage" src="{% static 'images/settings.png' %}"></a>
 </li>
 {% endfor %}
 </ul>

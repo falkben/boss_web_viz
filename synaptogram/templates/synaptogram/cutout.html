@@ -33,14 +33,15 @@
 
 <p>
     <strong>Channels</strong>
-            <a href="{% url 'synaptogram:ndviz_url' coll exp%}" target="_blank">NDViz</a>
+            <a href="{% url 'synaptogram:ndviz_url' coll exp%}" target="_blank"><img id="eye" src="{% static 'images/eye.svg' %}"></a>
             {% if channels|length > 3 %} (all but the first 3 disabled) {% endif %}
     <ul>
         {% for ch in channels %}
         <li>
             <a href="{% url 'synaptogram:channel_detail' coll exp ch %}">{{ch}}</a>
-            (<a href="{% url 'synaptogram:ndviz_url' coll exp ch%}" target="_blank">NDViz</a>)
-            (<a href="https://api.boss.neurodata.io/v1/mgmt/resources/{{coll}}/{{exp}}/{{ch}}" target="_blank">manage</a>)
+            <a href="{% url 'synaptogram:ndviz_url' coll exp ch%}" target="_blank"><img id="eye" src="{% static 'images/eye.svg' %}"></a>
+            |
+            <a href="https://api.boss.neurodata.io/v1/mgmt/resources/{{coll}}/{{exp}}/{{ch}}" target="_blank"><img id="manage" src="{% static 'images/settings.png' %}"></a>
         </li>
         {% endfor %}
     </ul>

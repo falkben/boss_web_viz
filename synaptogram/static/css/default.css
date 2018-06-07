@@ -38,6 +38,21 @@
     padding: 5px 5px 5px 5px;
 }
 
+#eye,
+#manage {
+    width: 20;
+    vertical-align: middle;
+}
+
+p a {
+    text-decoration: none !important;
+    border: 0px !important;
+    outline: none;
+    border-width: 0px;
+    outline-width: 0px;
+    border-bottom: none;
+}
+
 .page-header h1,
 .page-header h1 a,
 .page-header h1 a:visited,

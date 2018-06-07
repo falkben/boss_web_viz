@@ -1,5 +1,5 @@
 <p><strong>Collection:</strong>
 <!-- https://api.boss.neurodata.io/v1/mgmt/resources/collman -->
 <a href="{% url 'synaptogram:exp_list' coll %}">{{ coll }}</a>
-(<a href="https://api.boss.neurodata.io/v1/mgmt/resources/{{coll}}" target="blank">manage</a>)
+<a href="https://api.boss.neurodata.io/v1/mgmt/resources/{{coll}}" target="blank"><img id="manage" src="{% static 'images/settings.png' %}"></a>
 </p>
