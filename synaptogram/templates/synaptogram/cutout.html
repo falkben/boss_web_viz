@@ -1,5 +1,4 @@
-{% extends 'synaptogram/base.html' %}
-{% block content %}
+{% extends 'synaptogram/base.html' %} {% block content %}
 
 
 <script language="JavaScript">
@@ -18,131 +17,134 @@
         ↑
         <a href="{% url 'synaptogram:coll_list' %}">
             Collections</a>
-        | 
+        |
         <a href="{% url 'synaptogram:exp_list' coll %}">
             Experiments</a>
     </p>
-    
+
     <h3>Experiment Detail</h3>
 </div>
 
 <div class="exp_content">
 
-{% include 'synaptogram/coll_link.html' %} 
-{% include 'synaptogram/exp_link.html' %}
+    {% include 'synaptogram/coll_link.html' %} {% include 'synaptogram/exp_link.html' %}
 
-<p>
-    <strong>Channels</strong>
-            <a href="{% url 'synaptogram:ndviz_url' coll exp%}" target="_blank"><img id="eye" src="{% static 'images/eye.svg' %}"></a>
-            {% if channels|length > 3 %} (all but the first 3 disabled) {% endif %}
-    <ul>
-        {% for ch in channels %}
-        <li>
-            <a href="{% url 'synaptogram:channel_detail' coll exp ch %}">{{ch}}</a>
-            <a href="{% url 'synaptogram:ndviz_url' coll exp ch%}" target="_blank"><img id="eye" src="{% static 'images/eye.svg' %}"></a>
-            |
-            <a href="https://api.boss.neurodata.io/v1/mgmt/resources/{{coll}}/{{exp}}/{{ch}}" target="_blank"><img id="manage" src="{% static 'images/settings.png' %}"></a>
-        </li>
-        {% endfor %}
-    </ul>
-</p>
+    <p>
+        <strong>Channels</strong>
+        <a href="{% url 'synaptogram:ndviz_url' coll exp%}" target="_blank">
+            <img id="eye" src="{% static 'images/eye.svg' %}">
+        </a>
+        {% if channels|length > 3 %} (all but the first 3 disabled) {% endif %}
+        <ul>
+            {% for ch in channels %}
+            <li>
+                <a href="{% url 'synaptogram:channel_detail' coll exp ch %}">{{ch}}</a>
+                <a href="{% url 'synaptogram:ndviz_url' coll exp ch%}" target="_blank">
+                    <img id="eye" src="{% static 'images/eye.svg' %}">
+                </a>
+                |
+                <a href="https://api.boss.neurodata.io/v1/mgmt/resources/{{coll}}/{{exp}}/{{ch}}" target="_blank">
+                    <img id="manage" src="{% static 'images/settings.png' %}">
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </p>
 
-<h4>Cutout:</h4>
+    <h4>Cutout:</h4>
 
-<p>This service provides small volume cutouts from the BOSS.  To perform larger cutouts, or to download the entire volume, see our <a href="https://neurodata.io/access/">data access instructions</a></p>
+    <p>This service provides small volume cutouts from the BOSS. To perform larger cutouts, or to download the entire volume,
+        see our
+        <a href="https://neurodata.io/help/access/">data access instructions</a>
+    </p>
 
-<form action="{% url 'synaptogram:cutout' coll exp %}" method="post">
-    {% csrf_token %}
-    <table>
-        <tr>
-            <div class="fieldWrapper">
-                {{ form.x_min.errors }}
-                <td>{{ form.x_min.label_tag }}
+    <form action="{% url 'synaptogram:cutout' coll exp %}" method="post">
+        {% csrf_token %}
+        <table>
+            <tr>
+                <div class="fieldWrapper">
+                    {{ form.x_min.errors }}
+                    <td>{{ form.x_min.label_tag }}
 
-                </td>
+                    </td>
 
-                <td>{{ form.x_min }}</td>
-            </div>
-        </tr>
+                    <td>{{ form.x_min }}</td>
+                </div>
+            </tr>
 
-        <tr>
-            <div class="fieldWrapper">
-                {{ form.x_max.errors }}
-                <td>{{ form.x_max.label_tag }}</td>
-                <td>{{ form.x_max }}</td>
-            </div>
-        </tr>
+            <tr>
+                <div class="fieldWrapper">
+                    {{ form.x_max.errors }}
+                    <td>{{ form.x_max.label_tag }}</td>
+                    <td>{{ form.x_max }}</td>
+                </div>
+            </tr>
 
-        <tr>
-            <div class="fieldWrapper">
-                {{ form.y_min.errors }}
-                <td>{{ form.y_min.label_tag }}</td>
-                <td>{{ form.y_min }}</td>
-            </div>
-        </tr>
+            <tr>
+                <div class="fieldWrapper">
+                    {{ form.y_min.errors }}
+                    <td>{{ form.y_min.label_tag }}</td>
+                    <td>{{ form.y_min }}</td>
+                </div>
+            </tr>
 
-        <tr>
-            <div class="fieldWrapper">
-                {{ form.y_max.errors }}
-                <td>{{ form.y_max.label_tag }}</td>
-                <td>{{ form.y_max }}</td>
-            </div>
-        </tr>
+            <tr>
+                <div class="fieldWrapper">
+                    {{ form.y_max.errors }}
+                    <td>{{ form.y_max.label_tag }}</td>
+                    <td>{{ form.y_max }}</td>
+                </div>
+            </tr>
 
 
-        <tr>
-            <div class="fieldWrapper">
-                {{ form.z_min.errors }}
-                <td>{{ form.z_min.label_tag }}</td>
-                <td>{{ form.z_min }}</td>
-            </div>
-        </tr>
+            <tr>
+                <div class="fieldWrapper">
+                    {{ form.z_min.errors }}
+                    <td>{{ form.z_min.label_tag }}</td>
+                    <td>{{ form.z_min }}</td>
+                </div>
+            </tr>
 
-        <tr>
-            <div class="fieldWrapper">
-                {{ form.z_max.errors }}
-                <td>{{ form.z_max.label_tag }}</td>
-                <td>{{ form.z_max }}</td>
-            </div>
-        </tr>
+            <tr>
+                <div class="fieldWrapper">
+                    {{ form.z_max.errors }}
+                    <td>{{ form.z_max.label_tag }}</td>
+                    <td>{{ form.z_max }}</td>
+                </div>
+            </tr>
 
-        <tr>
-            <div class="fieldWrapper">
-                {{ form.channels.errors }}
-                <td>{{ form.channels.label_tag }}</td>
-                <td>
-                    <label for="toggle_ch_checkbox">
-                        <input type="checkbox" onClick="toggle(this, 'channels' )" 
-                        id="toggle_ch_checkbox" checked/> 
-                        Toggle channels
-                    </label><br>
-                    {{ form.channels }}
-                </td>
-            </div>
-        </tr>
+            <tr>
+                <div class="fieldWrapper">
+                    {{ form.channels.errors }}
+                    <td>{{ form.channels.label_tag }}</td>
+                    <td>
+                        <label for="toggle_ch_checkbox">
+                            <input type="checkbox" onClick="toggle(this, 'channels' )" id="toggle_ch_checkbox" checked/> Toggle channels
+                        </label>
+                        <br> {{ form.channels }}
+                    </td>
+                </div>
+            </tr>
 
-        <tr>
-            <div class="fieldWrapper">
-                {{ form.endpoint.errors }}
-                <td>{{ form.endpoint.label_tag }}</td>
-                <td>
-                <ul id="id_endpoint">
-                {% for radio in form.endpoint %}
-                    <li>
-                        {{ radio }}
-                        {% if radio.choice_label == 'Download TIFF stack per channel' %}
-                            at {{ form.res_select.label_tag }}
-                            {{ form.res_select }}
-                        {% endif %}
-                    </li>
-                {% endfor %}
-                </ul>
-                </td>
-            </div>
-        </tr>
-    </table>
-    <input type="submit" value="Submit" />
-</form>
+            <tr>
+                <div class="fieldWrapper">
+                    {{ form.endpoint.errors }}
+                    <td>{{ form.endpoint.label_tag }}</td>
+                    <td>
+                        <ul id="id_endpoint">
+                            {% for radio in form.endpoint %}
+                            <li>
+                                {{ radio }} {% if radio.choice_label == 'Download TIFF stack per channel' %} at {{ form.res_select.label_tag }} {{ form.res_select
+                                }} {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </div>
+            </tr>
+        </table>
+        <input type="submit" value="Submit" />
+    </form>
 
 </div>
 {% endblock %}
