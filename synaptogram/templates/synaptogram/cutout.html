@@ -1,4 +1,5 @@
-{% extends 'synaptogram/base.html' %} {% block content %}
+{% extends 'synaptogram/base.html' %}
+{% block content %}
 
 
 <script language="JavaScript">
@@ -27,7 +28,8 @@
 
 <div class="exp_content">
 
-    {% include 'synaptogram/coll_link.html' %} {% include 'synaptogram/exp_link.html' %}
+    {% include 'synaptogram/coll_link.html' %}
+    {% include 'synaptogram/exp_link.html' %}
 
     <p>
         <strong>Channels</strong>
@@ -134,8 +136,10 @@
                         <ul id="id_endpoint">
                             {% for radio in form.endpoint %}
                             <li>
-                                {{ radio }} {% if radio.choice_label == 'Download TIFF stack per channel' %} at {{ form.res_select.label_tag }} {{ form.res_select
-                                }} {% endif %}
+                                {{ radio }}
+                                {% if radio.choice_label == 'Download TIFF stack per channel' %}
+                                    at {{ form.res_select.label_tag }} {{ form.res_select }} 
+                                {% endif %}
                             </li>
                             {% endfor %}
                         </ul>
