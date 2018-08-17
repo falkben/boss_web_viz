@@ -35,7 +35,7 @@ class CutoutForm(forms.Form):
             label='resolution:', choices=[(c, c) for c in res_vals], widget=forms.Select())
 
     next_action = (
-        ('ndviz', 'Neurodata Viz links per slice'),
+        ('ndviz', 'NeuroData Viz links per slice'),
         ('tiff_stack', 'Download TIFF stack per channel'),
         ('sgram', 'Synaptogram'),
     )
