@@ -425,7 +425,7 @@ def ret_ndviz_channel_part(boss_url, ch_metadata, coll, exp, ch, ch_indx=0):
     if ch_indx > 2:
         visible_option = '_\'visible\':false'
 
-    #{'ch0':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/ailey-dev/Th1eYFP_control_12/ch0?window=0,10000'_'color':2}_'ch1':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/ailey-dev/Th1eYFP_control_12/ch1'_'opacity':0.45_'color':1}}
+    # {'ch0':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/ailey-dev/Th1eYFP_control_12/ch0?window=0,10000'_'color':2}_'ch1':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/ailey-dev/Th1eYFP_control_12/ch1'_'opacity':0.45_'color':1}}
     ch_link = ''.join(('\'', ch, '\':{\'type\':\'', chan_type, '\'_\'source\':\'boss://',
                        boss_url, coll, '/', exp, '/', ch, '?', window, '\'', blend, '_\'color\':',
                        col_idx, visible_option, '}'))
@@ -434,10 +434,10 @@ def ret_ndviz_channel_part(boss_url, ch_metadata, coll, exp, ch, ch_indx=0):
 
 def ret_ndviz_urls(request, coll, exp,
                    channels, x=None, y=None, z=None, voxel_sizes=None):
-    # https://viz-dev.boss.neurodata.io/#!%7B%27layers%27:%7B%27synapsinR_7thA%27:%7B%27type%27:%27image%27_%27source%27:%27boss://https://api.boss.neurodata.io/kristina15/image/synapsinR_7thA?window=0,10000%27%7D%7D_%27navigation%27:%7B%27pose%27:%7B%27position%27:%7B%27voxelSize%27:[100_100_70]_%27voxelCoordinates%27:[583.1588134765625_5237.650390625_18.5]%7D%7D_%27zoomFactor%27:15.304857247764861%7D%7D
+    # https://viz.neurodata.io/#!%7B%22layers%22:%7B%22synapsinR_7thA%22:%7B%22source%22:%22boss://https://api.boss.neurodata.io/kristina15/image/synapsinR_7thA?window=0%2C10000%22%2C%22type%22:%22image%22%7D%7D%2C%22navigation%22:%7B%22pose%22:%7B%22position%22:%7B%22voxelSize%22:%5B100%2C100%2C70%5D%2C%22voxelCoordinates%22:%5B583.1588134765625%2C5237.650390625%2C18.5%5D%7D%7D%2C%22zoomFactor%22:15.304857247764861%7D%2C%22layout%22:%22xy%22%7D
     # unescaped by: http://www.utilities-online.info/urlencode/
-    # https://viz-dev.boss.neurodata.io/#!{'layers':{'synapsinR_7thA':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/kristina15/image/synapsinR_7thA?window=0,10000'}}_'navigation':{'pose':{'position':{'voxelSize':[100_100_70]_'voxelCoordinates':[583.1588134765625_5237.650390625_18.5]}}_'zoomFactor':15.304857247764861}}
-    ndviz_base = 'https://viz.boss.neurodata.io/'
+    # https://viz.neurodata.io/#!{"layers":{"synapsinR_7thA":{"source":"boss://https://api.boss.neurodata.io/kristina15/image/synapsinR_7thA?window=0,10000","type":"image"}},"navigation":{"pose":{"position":{"voxelSize":[100,100,70],"voxelCoordinates":[583.1588134765625,5237.650390625,18.5]}},"zoomFactor":15.304857247764861},"layout":"xy"}
+    ndviz_base = 'https://viz.neurodata.io/'
     boss_url = 'https://api.boss.neurodata.io/'
 
     boss_remote = request.session['boss_remote']
@@ -578,9 +578,9 @@ def plot_sgram(request, coll, exp, x, y, z, channels):
 
 def parse_ndviz_url(request, url):
     # example URL:
-    #"https://viz-dev.boss.neurodata.io/#!{'layers':{'CR1_2ndA':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/kristina15/image/CR1_2ndA?window=0,10000'}}_'navigation':{'pose':{'position':{'voxelSize':[100_100_70]_'voxelCoordinates':[657.4783325195312_1069.4876708984375_11]}}_'zoomFactor':69.80685914923684}}"
+    # "https://viz.neurodata.io/#!%7B%22layers%22:%7B%22CR1_2ndA%22:%7B%22source%22:%22boss://https://api.boss.neurodata.io/kristina15/image/CR1_2ndA?window=0%2C10000%22%2C%22type%22:%22image%22%7D%7D%2C%22navigation%22:%7B%22pose%22:%7B%22position%22:%7B%22voxelSize%22:%5B100%2C100%2C70%5D%2C%22voxelCoordinates%22:%5B657%2C1069%2C11%5D%7D%7D%2C%22zoomFactor%22:69.80685914923684%7D%2C%22layout%22:%22xy%22%7D"
     split_url = url.split('/')
-    if split_url[2] != 'viz-dev.boss.neurodata.io' and split_url[2] != 'viz.boss.neurodata.io':
+    if split_url[2] not in ['viz-dev.boss.neurodata.io', 'viz.boss.neurodata.io', 'viz.neurodata.io']:
         return 'incorrect source', None
     coll = split_url[8]
     exp = split_url[9]

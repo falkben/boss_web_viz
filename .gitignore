@@ -17,3 +17,4 @@ env/
 
 !.elasticbeanstalk/*.global.yml
 neurodata.cfg
+.pytest_cache
