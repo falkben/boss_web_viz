@@ -8,6 +8,7 @@
 src/
 .cache/
 env/
+env_linux
 
 # Elastic Beanstalk Files
 
@@ -17,3 +18,4 @@ env/
 
 !.elasticbeanstalk/*.global.yml
 neurodata.cfg
+.pytest_cache

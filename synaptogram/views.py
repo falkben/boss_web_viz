@@ -27,6 +27,7 @@ from matplotlib.figure import Figure
 from .boss_remote import BossRemote
 from .forms import CutoutForm
 
+import ext.neuroglancer.python.neuroglancer as neuroglancer
 
 # All the actual views:
 
@@ -425,7 +426,7 @@ def ret_ndviz_channel_part(boss_url, ch_metadata, coll, exp, ch, ch_indx=0):
     if ch_indx > 2:
         visible_option = '_\'visible\':false'
 
-    #{'ch0':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/ailey-dev/Th1eYFP_control_12/ch0?window=0,10000'_'color':2}_'ch1':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/ailey-dev/Th1eYFP_control_12/ch1'_'opacity':0.45_'color':1}}
+    # {'ch0':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/ailey-dev/Th1eYFP_control_12/ch0?window=0,10000'_'color':2}_'ch1':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/ailey-dev/Th1eYFP_control_12/ch1'_'opacity':0.45_'color':1}}
     ch_link = ''.join(('\'', ch, '\':{\'type\':\'', chan_type, '\'_\'source\':\'boss://',
                        boss_url, coll, '/', exp, '/', ch, '?', window, '\'', blend, '_\'color\':',
                        col_idx, visible_option, '}'))
@@ -578,7 +579,7 @@ def plot_sgram(request, coll, exp, x, y, z, channels):
 
 def parse_ndviz_url(request, url):
     # example URL:
-    #"https://viz-dev.boss.neurodata.io/#!{'layers':{'CR1_2ndA':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/kristina15/image/CR1_2ndA?window=0,10000'}}_'navigation':{'pose':{'position':{'voxelSize':[100_100_70]_'voxelCoordinates':[657.4783325195312_1069.4876708984375_11]}}_'zoomFactor':69.80685914923684}}"
+    # "https://viz-dev.boss.neurodata.io/#!{'layers':{'CR1_2ndA':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/kristina15/image/CR1_2ndA?window=0,10000'}}_'navigation':{'pose':{'position':{'voxelSize':[100_100_70]_'voxelCoordinates':[657.4783325195312_1069.4876708984375_11]}}_'zoomFactor':69.80685914923684}}"
     split_url = url.split('/')
     if split_url[2] != 'viz-dev.boss.neurodata.io' and split_url[2] != 'viz.boss.neurodata.io':
         return 'incorrect source', None

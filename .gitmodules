@@ -1,0 +1,4 @@
+[submodule "ext/neuroglancer"]
+	path = ext/neuroglancer
+	url = https://github.com/neurodata/neuroglancer
+	branch = nd_state
