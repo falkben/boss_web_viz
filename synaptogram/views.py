@@ -405,7 +405,7 @@ def get_voxel_size(coord_frame):
     return [x, y, z]
 
 
-def ret_ndviz_channel_part(boss_url, ch_metadata, coll, exp, ch, ch_indx=0):
+def ret_ndviz_layer(boss_url, ch_metadata, coll, exp, ch, col_frac):
     if ch_metadata['datatype'] == 'uint16':
         if 'min_I' in ch_metadata:  # we have max/min values as BOSS metadata
             window = 'window={},{}'.format(
@@ -414,33 +414,25 @@ def ret_ndviz_channel_part(boss_url, ch_metadata, coll, exp, ch, ch_indx=0):
             window = 'window=0,10000'
     else:
         window = ''
+
+    # construct source url
+    source_url = 'boss://{}/{}/{}/{}?{}&color={}'.format(
+        boss_url, coll, exp, ch, window, '')
+
     if ch_metadata['type'] == 'image':
-        chan_type = 'image'
+        layer = neuroglancer.ImageLayer(source=source_url)
     else:
-        chan_type = 'segmentation'
+        layer = neuroglancer.SegmentationLayer(
+            source=source_url)
 
-    col_idx = str(ch_indx % 7)  # 7 colors supported by ndviz including white
-    blend = '_\'blend\':\'additive\''
-
-    visible_option = ''
-    if ch_indx > 2:
-        visible_option = '_\'visible\':false'
-
-    # {'ch0':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/ailey-dev/Th1eYFP_control_12/ch0?window=0,10000'_'color':2}_'ch1':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/ailey-dev/Th1eYFP_control_12/ch1'_'opacity':0.45_'color':1}}
-    ch_link = ''.join(('\'', ch, '\':{\'type\':\'', chan_type, '\'_\'source\':\'boss://',
-                       boss_url, coll, '/', exp, '/', ch, '?', window, '\'', blend, '_\'color\':',
-                       col_idx, visible_option, '}'))
-    return ch_link
+    return layer
 
 
 def ret_ndviz_urls(request, coll, exp,
                    channels, x=None, y=None, z=None, voxel_sizes=None):
-    # https://viz-dev.boss.neurodata.io/#!%7B%27layers%27:%7B%27synapsinR_7thA%27:%7B%27type%27:%27image%27_%27source%27:%27boss://https://api.boss.neurodata.io/kristina15/image/synapsinR_7thA?window=0,10000%27%7D%7D_%27navigation%27:%7B%27pose%27:%7B%27position%27:%7B%27voxelSize%27:[100_100_70]_%27voxelCoordinates%27:[583.1588134765625_5237.650390625_18.5]%7D%7D_%27zoomFactor%27:15.304857247764861%7D%7D
-    # unescaped by: http://www.utilities-online.info/urlencode/
-    # https://viz-dev.boss.neurodata.io/#!{'layers':{'synapsinR_7thA':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/kristina15/image/synapsinR_7thA?window=0,10000'}}_'navigation':{'pose':{'position':{'voxelSize':[100_100_70]_'voxelCoordinates':[583.1588134765625_5237.650390625_18.5]}}_'zoomFactor':15.304857247764861}}
-    ndviz_base = 'https://viz.boss.neurodata.io/'
-    boss_url = 'https://api.boss.neurodata.io/'
+    boss_url = 'https://api.boss.neurodata.io'
 
+    # we query the boss for info on the channel
     boss_remote = request.session['boss_remote']
 
     if z is not None:
@@ -451,40 +443,53 @@ def ret_ndviz_urls(request, coll, exp,
     ndviz_urls = []
     z_vals = []
 
-    ch_viz_links = []
+    layers = []
     for ch_indx, ch in enumerate(channels):
+        # for each channel we get some metadata
         ch_info = boss_remote.get_ch_info(coll, exp, ch)
 
-        keys = ['min_I', 'max_I']
-        for k in keys:
-            val = boss_remote.get_ch_metadata_key(coll, exp, ch, k)
-            if val:
-                ch_info[k] = val
-            else:
-                break
+        # we look for previously specified window values
+        # if annotation data, we never window
+        if ch_info['datatype'] != 'uint64':
+            keys = ['min_I', 'max_I']
+            for k in keys:
+                val = boss_remote.get_ch_metadata_key(coll, exp, ch, k)
+                if val:
+                    ch_info[k] = val
+                else:
+                    break
 
-        ch_link = ret_ndviz_channel_part(
-            boss_url, ch_info, coll, exp, ch, ch_indx)
-        ch_viz_links.append(ch_link)
+        ch_layer = ret_ndviz_layer(
+            boss_url, ch_info, coll, exp, ch, ch_indx/len(channels))
+        layers.append(ch_layer)
+
+    set_nav = False
+    if x is not None and y is not None and voxel_sizes is not None:
+        x_vals = list(map(int, x.split(':')))
+        x_mid = str(round(sum(x_vals) / 2))
+        y_vals = list(map(int, y.split(':')))
+        y_mid = str(round(sum(y_vals) / 2))
+        set_nav = True
 
     for z_val in range(z_rng[0], z_rng[1]):
-        joined_ndviz_url = ''.join(
-            (ndviz_base, '#!{\'layers\':{', '_'.join(ch_viz_links), '}'))
+        state = neuroglancer.ViewerState()
+        state.layout = 'xy'
 
-        if x is not None and y is not None and voxel_sizes is not None:
-            x_vals = list(map(int, x.split(':')))
-            x_mid = str(round(sum(x_vals) / 2))
-            y_vals = list(map(int, y.split(':')))
-            y_mid = str(round(sum(y_vals) / 2))
+        # add in each layer
+        visible = True
+        for i, (layer, ch) in enumerate(zip(layers, channels)):
+            if i > 2:
+                visible = False
 
-            # add navigation
-            # we add the zoomfactor in the template, where we can get the accurate window width
-            joined_ndviz_url = '{}_\'navigation\':{{\'pose\':{{\'position\':{{\'voxelCoordinates\':[{}_{}_{}]}}}}_\'zoomFactor\':}}}}'.format(
-                joined_ndviz_url, x_mid, y_mid, z_val)
-        else:
-            joined_ndviz_url = '{}}}'.format(joined_ndviz_url)
+            state.layers.append(
+                name=ch,
+                layer=layer,
+                visible=visible
+            )
+        if set_nav:
+            state.voxel_coordinates = [x_mid, y_mid, z_val]
 
-        ndviz_urls.append(joined_ndviz_url)
+        ndviz_urls.append(neuroglancer.to_url(state))
         z_vals.append(str(z_val))
     return ndviz_urls, z_vals
 
