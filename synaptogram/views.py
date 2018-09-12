@@ -507,7 +507,6 @@ def ret_ndviz_urls(request, coll, exp,
             )
         if set_nav:
             state.voxel_coordinates = [x_mid, y_mid, z_val]
-            state.voxel_size = voxel_sizes
 
         ndviz_urls.append(neuroglancer.to_url(state))
         z_vals.append(str(z_val))
