@@ -29,6 +29,18 @@ from .forms import CutoutForm
 
 import ext.neuroglancer.python.neuroglancer as neuroglancer
 
+
+def load_cmap(filename):
+    cmap = []
+    with open(filename, 'r') as f:
+        cmap = f.read().strip().split(',')
+    return cmap
+
+
+# this is a maximally distinct colormap, sourced from https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
+CMAP = load_cmap('synaptogram/colormap.csv')
+
+
 # All the actual views:
 
 
@@ -484,8 +496,6 @@ def ret_ndviz_urls(request, coll, exp, channels, x=None, y=None, z=None):
         state = neuroglancer.ViewerState()
         state.layout = 'xy'
 
-        cmap = matplotlib.cm.get_cmap('nipy_spectral', img_chs)
-
         # add in each layer
         visible = True
         skip_chs = 0
@@ -495,8 +505,7 @@ def ret_ndviz_urls(request, coll, exp, channels, x=None, y=None, z=None):
 
             kwargs = {}
             if ch_info['datatype'] != 'uint64':
-                kwargs['color'] = matplotlib.colors.rgb2hex(
-                    cmap(i-skip_chs)[:3])
+                kwargs['color'] = CMAP[i % len(CMAP) - skip_chs]
             else:
                 skip_chs += 1
 
