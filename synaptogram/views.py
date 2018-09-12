@@ -420,10 +420,15 @@ def ret_ndviz_layer(boss_url, ch_metadata, coll, exp, ch):
         boss_url, coll, exp, ch, window)
 
     if ch_metadata['type'] == 'image':
-        layer = neuroglancer.ImageLayer(source=source_url)
+        layer = neuroglancer.ImageLayer(
+            source=source_url,
+            blend="additive",
+            opacity=1,
+        )
     else:
         layer = neuroglancer.SegmentationLayer(
-            source=source_url)
+            source=source_url,
+            selectedAlpha=.4)
 
     return layer
 
@@ -487,17 +492,18 @@ def ret_ndviz_urls(request, coll, exp,
             if i > 2:
                 visible = False
 
+            kwargs = {}
             if ch_info['datatype'] != 'uint64':
-                color = matplotlib.colors.rgb2hex(cmap(i-skip_chs)[:3])
+                kwargs['color'] = matplotlib.colors.rgb2hex(
+                    cmap(i-skip_chs)[:3])
             else:
-                color = None
-                skip_chs +=1
+                skip_chs += 1
 
             state.layers.append(
                 name=ch,
                 layer=layer,
                 visible=visible,
-                color=color,
+                **kwargs,
             )
         if set_nav:
             state.voxel_coordinates = [x_mid, y_mid, z_val]
