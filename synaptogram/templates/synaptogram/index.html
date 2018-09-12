@@ -4,24 +4,32 @@
 <h3>NeuroData web tools</h3>
 
 <p>
-    Providing web services for <a href="https://neurodata.io" target="_blank">NeuroData</a>
+  Providing web services for <a href="https://neurodata.io" target="_blank">NeuroData</a>
 </p>
 
 <h4>Features:</h4>
 <ul>
-    <li>TIFF image cutouts</li>
-    <li>Links to <a href="https://viz.boss.neurodata.io/" target="_blank">NeuroDataViz</a></li>
-    <li>Bookmarklet to navigate from NeuroDataViz to the image cutout form</li>
-    <li>Integration with NeuroData's data ingest</li>
-    <li>Exploratory data analysis/visualization</li>
+  <li>Provides fast, easy access to data hosted by NeuroData
+    <ul>
+      <li>TIFF image cutouts (small < 1GB) 
+        <ul>
+          <li>for anything larger see our page on [data access](https://neurodata.io/help/access/)</li>
+        </ul>
+      </li>
+      <li>Links to NeuroData's <a href="https://viz.neurodata.io/" target="_blank">Neuroglancer</a></li>
+    </ul>
+  </li>
+  <li>Bookmarklet to navigate from Neuroglancer to a data cutout form with preserved navigation information</li>
+  <li>Integration with NeuroData's data ingest</li>
+  <li>Exploratory data analysis/visualization</li>
 </ul>
 
 <a class="button" href="{% url 'synaptogram:coll_list' %}">
-    {% if user.is_authenticated %}
-        List collections
-    {% else %}
-        Login
-    {% endif %}
+  {% if user.is_authenticated %}
+  List collections
+  {% else %}
+  Login
+  {% endif %}
 </a>
 
 {% endblock %}
