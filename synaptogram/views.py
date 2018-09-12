@@ -190,14 +190,16 @@ def ndviz_url_list(request):
     q = request.GET
     coll, exp, x, y, z, channels = process_params(q)
 
-    coord_frame = boss_remote.get_coordinate_frame(coll, exp)
-    voxel_sizes = get_voxel_size(coord_frame)
-    urls, z_vals = ret_ndviz_urls(
-        request, coll, exp, channels, x, y, z, voxel_sizes)
+    urls, z_vals = ret_ndviz_urls(request, coll, exp, channels, x, y, z)
 
     x_int = list(map(int, x.split(':')))
 
     channel_ndviz_list = zip(z_vals, urls)
+
+    # voxel sizes are used to set the zoom factor for each URL
+    coord_frame = boss_remote.get_coordinate_frame(coll, exp)
+    voxel_sizes = get_voxel_size(coord_frame)
+
     context = {
         'channel_ndviz_list': channel_ndviz_list,
         'coll': coll,
@@ -433,8 +435,7 @@ def ret_ndviz_layer(boss_url, ch_metadata, coll, exp, ch):
     return layer
 
 
-def ret_ndviz_urls(request, coll, exp,
-                   channels, x=None, y=None, z=None, voxel_sizes=None):
+def ret_ndviz_urls(request, coll, exp, channels, x=None, y=None, z=None):
     boss_url = 'https://api.boss.neurodata.io'
 
     # we query the boss for info on the channel
@@ -472,7 +473,7 @@ def ret_ndviz_urls(request, coll, exp,
         ch_infos.append(ch_info)
 
     set_nav = False
-    if x is not None and y is not None and voxel_sizes is not None:
+    if x is not None and y is not None:
         x_vals = list(map(int, x.split(':')))
         x_mid = str(round(sum(x_vals) / 2))
         y_vals = list(map(int, y.split(':')))
