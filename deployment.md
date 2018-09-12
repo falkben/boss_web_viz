@@ -28,6 +28,14 @@
     1. `python manage.py migrate`
 1. Test if site works with this command: `python manage.py runserver 0:8080`
 
+## Update
+
+These are for updating production deployment, after the steps below have been followed:
+
+1. From within the ndwebtools repo: `git pull`
+    - This should update the git submodule.  If for some reason it doesn't, run: `git submodule update --recursive --remote`
+1. Restart uwsgi: `sudo systemctl restart uwsgi`
+
 ## Deployment
 
 Deployment (for production) using [uwsgi](https://uwsgi-docs.readthedocs.io/en/latest/) and [nginx](https://www.nginx.com/)
