@@ -405,7 +405,7 @@ def get_voxel_size(coord_frame):
     return [x, y, z]
 
 
-def ret_ndviz_layer(boss_url, ch_metadata, coll, exp, ch, col_frac):
+def ret_ndviz_layer(boss_url, ch_metadata, coll, exp, ch):
     if ch_metadata['datatype'] == 'uint16':
         if 'min_I' in ch_metadata:  # we have max/min values as BOSS metadata
             window = 'window={},{}'.format(
@@ -416,8 +416,8 @@ def ret_ndviz_layer(boss_url, ch_metadata, coll, exp, ch, col_frac):
         window = ''
 
     # construct source url
-    source_url = 'boss://{}/{}/{}/{}?{}&color={}'.format(
-        boss_url, coll, exp, ch, window, '')
+    source_url = 'boss://{}/{}/{}/{}?{}'.format(
+        boss_url, coll, exp, ch, window)
 
     if ch_metadata['type'] == 'image':
         layer = neuroglancer.ImageLayer(source=source_url)
@@ -444,6 +444,8 @@ def ret_ndviz_urls(request, coll, exp,
     z_vals = []
 
     layers = []
+    ch_infos = []
+    img_chs = 0
     for ch_indx, ch in enumerate(channels):
         # for each channel we get some metadata
         ch_info = boss_remote.get_ch_info(coll, exp, ch)
@@ -451,6 +453,7 @@ def ret_ndviz_urls(request, coll, exp,
         # we look for previously specified window values
         # if annotation data, we never window
         if ch_info['datatype'] != 'uint64':
+            img_chs += 1  # used for setting the colormap
             keys = ['min_I', 'max_I']
             for k in keys:
                 val = boss_remote.get_ch_metadata_key(coll, exp, ch, k)
@@ -459,9 +462,9 @@ def ret_ndviz_urls(request, coll, exp,
                 else:
                     break
 
-        ch_layer = ret_ndviz_layer(
-            boss_url, ch_info, coll, exp, ch, ch_indx/len(channels))
+        ch_layer = ret_ndviz_layer(boss_url, ch_info, coll, exp, ch)
         layers.append(ch_layer)
+        ch_infos.append(ch_info)
 
     set_nav = False
     if x is not None and y is not None and voxel_sizes is not None:
@@ -475,19 +478,30 @@ def ret_ndviz_urls(request, coll, exp,
         state = neuroglancer.ViewerState()
         state.layout = 'xy'
 
+        cmap = matplotlib.cm.get_cmap('nipy_spectral', img_chs)
+
         # add in each layer
         visible = True
-        for i, (layer, ch) in enumerate(zip(layers, channels)):
+        skip_chs = 0
+        for i, (layer, ch, ch_info) in enumerate(zip(layers, channels, ch_infos)):
             if i > 2:
                 visible = False
+
+            if ch_info['datatype'] != 'uint64':
+                color = matplotlib.colors.rgb2hex(cmap(i-skip_chs)[:3])
+            else:
+                color = None
+                skip_chs +=1
 
             state.layers.append(
                 name=ch,
                 layer=layer,
-                visible=visible
+                visible=visible,
+                color=color,
             )
         if set_nav:
             state.voxel_coordinates = [x_mid, y_mid, z_val]
+            state.voxel_size = voxel_sizes
 
         ndviz_urls.append(neuroglancer.to_url(state))
         z_vals.append(str(z_val))
