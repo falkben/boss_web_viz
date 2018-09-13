@@ -27,6 +27,19 @@ from matplotlib.figure import Figure
 from .boss_remote import BossRemote
 from .forms import CutoutForm
 
+import ext.neuroglancer.python.neuroglancer as neuroglancer
+
+
+def load_cmap(filename):
+    cmap = []
+    with open(filename, 'r') as f:
+        cmap = f.read().strip().split(',')
+    return cmap
+
+
+# this is a maximally distinct colormap, sourced from https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
+CMAP = load_cmap('synaptogram/colormap.csv')
+
 
 # All the actual views:
 
@@ -189,14 +202,16 @@ def ndviz_url_list(request):
     q = request.GET
     coll, exp, x, y, z, channels = process_params(q)
 
-    coord_frame = boss_remote.get_coordinate_frame(coll, exp)
-    voxel_sizes = get_voxel_size(coord_frame)
-    urls, z_vals = ret_ndviz_urls(
-        request, coll, exp, channels, x, y, z, voxel_sizes)
+    urls, z_vals = ret_ndviz_urls(request, coll, exp, channels, x, y, z)
 
     x_int = list(map(int, x.split(':')))
 
     channel_ndviz_list = zip(z_vals, urls)
+
+    # voxel sizes are used to set the zoom factor for each URL
+    coord_frame = boss_remote.get_coordinate_frame(coll, exp)
+    voxel_sizes = get_voxel_size(coord_frame)
+
     context = {
         'channel_ndviz_list': channel_ndviz_list,
         'coll': coll,
@@ -404,7 +419,7 @@ def get_voxel_size(coord_frame):
     return [x, y, z]
 
 
-def ret_ndviz_channel_part(boss_url, ch_metadata, coll, exp, ch, ch_indx=0):
+def ret_ndviz_layer(boss_url, ch_metadata, coll, exp, ch):
     if ch_metadata['datatype'] == 'uint16':
         if 'min_I' in ch_metadata:  # we have max/min values as BOSS metadata
             window = 'window={},{}'.format(
@@ -413,33 +428,29 @@ def ret_ndviz_channel_part(boss_url, ch_metadata, coll, exp, ch, ch_indx=0):
             window = 'window=0,10000'
     else:
         window = ''
+
+    # construct source url
+    source_url = 'boss://{}/{}/{}/{}?{}'.format(
+        boss_url, coll, exp, ch, window)
+
     if ch_metadata['type'] == 'image':
-        chan_type = 'image'
+        layer = neuroglancer.ImageLayer(
+            source=source_url,
+            blend="additive",
+            opacity=1,
+        )
     else:
-        chan_type = 'segmentation'
+        layer = neuroglancer.SegmentationLayer(
+            source=source_url,
+            selectedAlpha=.4)
 
-    col_idx = str(ch_indx % 7)  # 7 colors supported by ndviz including white
-    blend = '_\'blend\':\'additive\''
-
-    visible_option = ''
-    if ch_indx > 2:
-        visible_option = '_\'visible\':false'
-
-    #{'ch0':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/ailey-dev/Th1eYFP_control_12/ch0?window=0,10000'_'color':2}_'ch1':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/ailey-dev/Th1eYFP_control_12/ch1'_'opacity':0.45_'color':1}}
-    ch_link = ''.join(('\'', ch, '\':{\'type\':\'', chan_type, '\'_\'source\':\'boss://',
-                       boss_url, coll, '/', exp, '/', ch, '?', window, '\'', blend, '_\'color\':',
-                       col_idx, visible_option, '}'))
-    return ch_link
+    return layer
 
 
-def ret_ndviz_urls(request, coll, exp,
-                   channels, x=None, y=None, z=None, voxel_sizes=None):
-    # https://viz-dev.boss.neurodata.io/#!%7B%27layers%27:%7B%27synapsinR_7thA%27:%7B%27type%27:%27image%27_%27source%27:%27boss://https://api.boss.neurodata.io/kristina15/image/synapsinR_7thA?window=0,10000%27%7D%7D_%27navigation%27:%7B%27pose%27:%7B%27position%27:%7B%27voxelSize%27:[100_100_70]_%27voxelCoordinates%27:[583.1588134765625_5237.650390625_18.5]%7D%7D_%27zoomFactor%27:15.304857247764861%7D%7D
-    # unescaped by: http://www.utilities-online.info/urlencode/
-    # https://viz-dev.boss.neurodata.io/#!{'layers':{'synapsinR_7thA':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/kristina15/image/synapsinR_7thA?window=0,10000'}}_'navigation':{'pose':{'position':{'voxelSize':[100_100_70]_'voxelCoordinates':[583.1588134765625_5237.650390625_18.5]}}_'zoomFactor':15.304857247764861}}
-    ndviz_base = 'https://viz.boss.neurodata.io/'
-    boss_url = 'https://api.boss.neurodata.io/'
+def ret_ndviz_urls(request, coll, exp, channels, x=None, y=None, z=None):
+    boss_url = 'https://api.boss.neurodata.io'
 
+    # we query the boss for info on the channel
     boss_remote = request.session['boss_remote']
 
     if z is not None:
@@ -450,40 +461,69 @@ def ret_ndviz_urls(request, coll, exp,
     ndviz_urls = []
     z_vals = []
 
-    ch_viz_links = []
+    layers = []
+    ch_infos = []
+    img_chs = 0
     for ch_indx, ch in enumerate(channels):
+        # for each channel we get some metadata
         ch_info = boss_remote.get_ch_info(coll, exp, ch)
 
-        keys = ['min_I', 'max_I']
-        for k in keys:
-            val = boss_remote.get_ch_metadata_key(coll, exp, ch, k)
-            if val:
-                ch_info[k] = val
-            else:
-                break
+        # we look for previously specified window values
+        # if annotation data, we never window
+        if ch_info['datatype'] != 'uint64':
+            img_chs += 1  # used for setting the colormap
+            keys = ['min_I', 'max_I']
+            for k in keys:
+                val = boss_remote.get_ch_metadata_key(coll, exp, ch, k)
+                if val:
+                    ch_info[k] = val
+                else:
+                    break
 
-        ch_link = ret_ndviz_channel_part(
-            boss_url, ch_info, coll, exp, ch, ch_indx)
-        ch_viz_links.append(ch_link)
+        ch_layer = ret_ndviz_layer(boss_url, ch_info, coll, exp, ch)
+        layers.append(ch_layer)
+        ch_infos.append(ch_info)
+
+    set_nav = False
+    if x is not None and y is not None:
+        x_vals = list(map(int, x.split(':')))
+        x_mid = str(round(sum(x_vals) / 2))
+        y_vals = list(map(int, y.split(':')))
+        y_mid = str(round(sum(y_vals) / 2))
+        set_nav = True
+
+    # sort the segmentation layers after the image layers (good for opacity)
+    segs = list(map(lambda ch_i: ch_i['datatype'] == 'uint64', ch_infos))
+    idx = sorted(range(len(segs)), key=segs.__getitem__)
 
     for z_val in range(z_rng[0], z_rng[1]):
-        joined_ndviz_url = ''.join(
-            (ndviz_base, '#!{\'layers\':{', '_'.join(ch_viz_links), '}'))
+        state = neuroglancer.ViewerState()
+        state.layout = 'xy'
 
-        if x is not None and y is not None and voxel_sizes is not None:
-            x_vals = list(map(int, x.split(':')))
-            x_mid = str(round(sum(x_vals) / 2))
-            y_vals = list(map(int, y.split(':')))
-            y_mid = str(round(sum(y_vals) / 2))
+        # add in each layer
+        visible = True
+        skip_chs = 0
+        for i, (layer, ch, ch_info) in enumerate(zip([layers[i] for i in idx], [channels[i] for i in idx], [ch_infos[i] for i in idx])):
+            # disable visibility for channel index > 2 in list after sorting
+            if i > 2:
+                visible = False
 
-            # add navigation
-            # we add the zoomfactor in the template, where we can get the accurate window width
-            joined_ndviz_url = '{}_\'navigation\':{{\'pose\':{{\'position\':{{\'voxelCoordinates\':[{}_{}_{}]}}}}_\'zoomFactor\':}}}}'.format(
-                joined_ndviz_url, x_mid, y_mid, z_val)
-        else:
-            joined_ndviz_url = '{}}}'.format(joined_ndviz_url)
+            kwargs = {}
+            if ch_info['datatype'] != 'uint64':
+                kwargs['color'] = CMAP[i % len(CMAP) - skip_chs]
+            else:
+                skip_chs += 1
 
-        ndviz_urls.append(joined_ndviz_url)
+            state.layers.append(
+                name=ch,
+                layer=layer,
+                visible=visible,
+                **kwargs,
+            )
+        if set_nav:
+            state.voxel_coordinates = [x_mid, y_mid, z_val]
+
+        ndviz_urls.append(neuroglancer.to_url(state))
         z_vals.append(str(z_val))
     return ndviz_urls, z_vals
 
@@ -578,7 +618,7 @@ def plot_sgram(request, coll, exp, x, y, z, channels):
 
 def parse_ndviz_url(request, url):
     # example URL:
-    #"https://viz-dev.boss.neurodata.io/#!{'layers':{'CR1_2ndA':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/kristina15/image/CR1_2ndA?window=0,10000'}}_'navigation':{'pose':{'position':{'voxelSize':[100_100_70]_'voxelCoordinates':[657.4783325195312_1069.4876708984375_11]}}_'zoomFactor':69.80685914923684}}"
+    # "https://viz-dev.boss.neurodata.io/#!{'layers':{'CR1_2ndA':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/kristina15/image/CR1_2ndA?window=0,10000'}}_'navigation':{'pose':{'position':{'voxelSize':[100_100_70]_'voxelCoordinates':[657.4783325195312_1069.4876708984375_11]}}_'zoomFactor':69.80685914923684}}"
     split_url = url.split('/')
     if split_url[2] != 'viz-dev.boss.neurodata.io' and split_url[2] != 'viz.boss.neurodata.io':
         return 'incorrect source', None

@@ -1,31 +1,55 @@
-# Notes on deployment
+# Install and deployment
 
-## Install ndwebtools (linux)
-- Create a virtual environment (python 3)
-    - `virtualenv ndwebtools_env -p /usr/bin/python3`
-- Clone ndwebtools into virtual environment path
-- Install requirements of ndwebtools
-    - `pip install -r requirements.txt`
-- create `local_settings.py` file inside mysite/ with the following values:
-    - SECRET KEY
-    - DEBUG (True/False)
-    - ALLOWED_HOSTS (`['*']`)
-    - auth_uri
-    - cliend_id
-    - public_uri
-- `python manage.py makemigrations bossoidc`
-- `python manage.py migrate`
+## Install
 
-### Test to see if site works
-- `python manage.py runserver 0:8080`
+1. Checkout code from github: `git clone https://github.com/neurodata/ndwebtools.git`
+1. Initialize submodules: `git submodule update --init --recursive`
+1. Create virtual environment & activate
+1. Install dependencies: `pip install -r requirements.txt`
+1. Create `local_settings.py` file inside mysite/ with the following values:
+    ```ini
+    SECRET KEY
+    DEBUG (True/False)
+    ALLOWED_HOSTS (`['*']`)
+    auth_uri
+    cliend_id
+    public_uri
+    ```
+    
+    Note that SECRET KEY can be generated in Python:
+    
+    ```python
+    from django.core.management.utils import get_random_secret_key
+    get_random_secret_key()
+    ```
+    
+1. Database initialization
+    1. `python manage.py makemigrations bossoidc`
+    1. `python manage.py migrate`
+1. Test if site works with this command: `python manage.py runserver 0:8080`
 
-## Server deployment
-### Many of these are from the [tutorial](https://uwsgi-docs.readthedocs.io/en/latest/tutorials/Django_and_nginx.html) for setting up uWSGI with Django (and nginx)
-- Installation (using systemwide install)
+## Update
+
+These are for updating production deployment, after the steps below have been followed:
+
+1. From within the ndwebtools repo: `git pull`
+    - This should update the git submodule.  If for some reason it doesn't, run: `git submodule update --recursive --remote`
+1. Restart uwsgi: `sudo systemctl restart uwsgi`
+
+## Deployment
+
+Deployment (for production) using [uwsgi](https://uwsgi-docs.readthedocs.io/en/latest/) and [nginx](https://www.nginx.com/)
+
+The following instructions are modified from the [tutorial](https://uwsgi-docs.readthedocs.io/en/latest/tutorials/Django_and_nginx.html) for setting up uWSGI with Django (and nginx)
+
+- Installation (systemwide install)
+
     - `sudo apt install uwsgi`
     - `sudo apt install nginx`
     - drop the uwsgi_params file in your local path (might not be needed): https://github.com/nginx/nginx/blob/master/conf/uwsgi_params
+
 ### Nginx config
+
 - create `mysite_nginx.conf` file
     ```apacheconf
     # mysite_nginx.conf
@@ -115,7 +139,6 @@
 
 ### Collect the static files into one location
 - `python manage.py collectstatic`
-
 
 ### Start the services
 - `sudo systemctl daemon-reload`
