@@ -492,6 +492,10 @@ def ret_ndviz_urls(request, coll, exp, channels, x=None, y=None, z=None):
         y_mid = str(round(sum(y_vals) / 2))
         set_nav = True
 
+    # sort the segmentation layers after the image layers (good for opacity)
+    segs = list(map(lambda ch_i: ch_i['datatype'] == 'uint64', ch_infos))
+    idx = sorted(range(len(segs)), key=segs.__getitem__)
+
     for z_val in range(z_rng[0], z_rng[1]):
         state = neuroglancer.ViewerState()
         state.layout = 'xy'
@@ -499,7 +503,8 @@ def ret_ndviz_urls(request, coll, exp, channels, x=None, y=None, z=None):
         # add in each layer
         visible = True
         skip_chs = 0
-        for i, (layer, ch, ch_info) in enumerate(zip(layers, channels, ch_infos)):
+        for i, (layer, ch, ch_info) in enumerate(zip([layers[i] for i in idx], [channels[i] for i in idx], [ch_infos[i] for i in idx])):
+            # disable visibility for channel index > 2 in list after sorting
             if i > 2:
                 visible = False
 
