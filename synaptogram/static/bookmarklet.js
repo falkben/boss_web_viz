@@ -1,32 +1,48 @@
 javascript: (function () {
-    var data_panel = document.getElementsByClassName('rendered-data-panel');
+    let ndwt = 'https://ndwt.neurodata.io/';
+
+    let data_panel = document.getElementsByClassName('rendered-data-panel');
     if (data_panel.length == 0) {
         data_panel = document.getElementsByClassName('neuroglancer-rendered-data-panel neuroglancer-panel neuroglancer-noselect');
     }
-    if (data_panel.length == 0) {
-        window.open('http://ndwebtools.neurodata.io/sgram_from_ndviz?url=' + encodeURIComponent(location.href))
+
+    let state = window.viewer.state.toJSON();
+
+    if (typeof state.layers == 'undefined') {
+        window.open(ndwt);
     }
-    var paneldiv = data_panel[0];
 
-    var clientHeight = paneldiv.clientHeight;
-    var clientWidth = paneldiv.clientWidth;
+    let idx = 0;
+    let source = '';
+    if (typeof (state.selectedLayer) != 'undefined') {
+        idx = state.selectedLayer;
+        source = state.layers[idx.layer].source
+    } else {
+        let L = state.layers;
+        source = Object.entries(L)[0][1].source
+    }
 
-    var zoomfactor = window.viewer.navigationState.zoomFactor.value;
-    var voxelSize = window.viewer.navigationState.pose.position.voxelSize.size;
+    let paneldiv = data_panel[0];
 
-    var spatialcoords = window.viewer.navigationState.pose.position.spatialCoordinates;
+    let clientHeight = paneldiv.clientHeight;
+    let clientWidth = paneldiv.clientWidth;
 
-    var coords = [];
+    let zoomfactor = window.viewer.navigationState.zoomFactor.value;
+    let voxelSize = window.viewer.navigationState.pose.position.voxelSize.size;
+
+    let spatialcoords = window.viewer.navigationState.pose.position.spatialCoordinates;
+
+    let coords = [];
     for (i = 0; i < spatialcoords.length; i++) {
         coords.push(spatialcoords[i] / voxelSize[i]);
     }
 
-    var datawidth = clientWidth * zoomfactor / voxelSize[0];
-    var dataheight = clientHeight * zoomfactor / voxelSize[1];
+    let datawidth = clientWidth * zoomfactor / voxelSize[0];
+    let dataheight = clientHeight * zoomfactor / voxelSize[1];
 
-    var xextents = [Math.round(coords[0] - datawidth / 2), Math.round(coords[0] + datawidth / 2)];
-    var yextents = [Math.round(coords[1] - dataheight / 2), Math.round(coords[1] + dataheight / 2)];
+    let xextents = [Math.round(coords[0] - datawidth / 2), Math.round(coords[0] + datawidth / 2)];
+    let yextents = [Math.round(coords[1] - dataheight / 2), Math.round(coords[1] + dataheight / 2)];
 
-    window.open('http://ndwebtools.neurodata.io/sgram_from_ndviz?xextent=' + xextents + '&yextent=' + yextents + '&coords=' + coords + '&url=' + encodeURIComponent(location.href))
-}
-)();
+
+    window.open(ndwt + 'sgram_from_ndviz?xextent=' + xextents + '&yextent=' + yextents + '&coords=' + coords + '&source=' + source)
+})();
