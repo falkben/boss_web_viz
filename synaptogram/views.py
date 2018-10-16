@@ -300,8 +300,12 @@ def sgram(request):
 
 @login_required
 def sgram_from_ndviz(request):
-    url = request.GET.get('url')
-    coll, exp = parse_ndviz_url(request, url)
+    source = request.GET.get('source')
+    try:
+        coll, exp = parse_ndviz_url(request, source)
+    except Exception as e:
+        messages.error(request, str(e))
+        return render(request, 'synaptogram/index.html')
 
     x = ':'.join(request.GET.get('xextent').split(','))
     y = ':'.join(request.GET.get('yextent').split(','))
@@ -616,14 +620,17 @@ def plot_sgram(request, coll, exp, x, y, z, channels):
     return response
 
 
-def parse_ndviz_url(request, url):
-    # example URL:
-    # "https://viz-dev.boss.neurodata.io/#!{'layers':{'CR1_2ndA':{'type':'image'_'source':'boss://https://api.boss.neurodata.io/kristina15/image/CR1_2ndA?window=0,10000'}}_'navigation':{'pose':{'position':{'voxelSize':[100_100_70]_'voxelCoordinates':[657.4783325195312_1069.4876708984375_11]}}_'zoomFactor':69.80685914923684}}"
-    split_url = url.split('/')
-    if split_url[2] != 'viz-dev.boss.neurodata.io' and split_url[2] != 'viz.boss.neurodata.io':
-        return 'incorrect source', None
-    coll = split_url[8]
-    exp = split_url[9]
+def parse_ndviz_url(request, source):
+    # example source:
+    # "source": "boss://https://api.boss.neurodata.io/bhatla/ritaN2/image?",
+
+    split_url = source.split('/')
+
+    if split_url[0] != 'boss:':
+        raise ValueError('Not a BOSS source')
+
+    coll = split_url[5]
+    exp = split_url[6]
 
     return coll, exp
 
