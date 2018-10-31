@@ -615,9 +615,9 @@ def plot_sgram(request, coll, exp, x, y, z, channels):
     # plt.savefig('synaptogram.png')
     # return render(request, 'synaptogram/sgram.html',context)
     canvas = FigureCanvas(fig)
-    response = HttpResponse(content_type='image/png')
-    canvas.print_png(response)
-    return response
+    buffer = BytesIO()
+    canvas.print_png(buffer)
+    return HttpResponse(buffer.getvalue(), content_type='image/png')
 
 
 def parse_ndviz_url(request, source):
