@@ -1,6 +1,7 @@
 import os
 import re
 import time
+from datetime import datetime, timezone
 import zipfile
 from io import BytesIO
 
@@ -65,10 +66,9 @@ def set_sess_exp(request):
     # we set the session expiration to match the bearer token expiration
     id_token = request.session.get('id_token')
     if id_token is not None:  # if admin interfact we aren't using KeyCloak
-        epoch_time_KC = id_token['exp']
-        epoch_time_loc = round(time.time())  # + time.timezone
-        new_exp_time = epoch_time_KC - epoch_time_loc
-        request.session.set_expiry(new_exp_time)
+        exp_datenum = id_token['exp']
+        exp_datetime = datetime.fromtimestamp(exp_datenum, timezone.utc)
+        request.session.set_expiry(exp_datetime)
 
 
 @login_required
