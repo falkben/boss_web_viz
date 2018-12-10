@@ -6,7 +6,7 @@
 
 - Provides fast, easy access to data hosted by NeuroData
   - TIFF image cutouts (small < 1GB)
-    - for anything larger see our page on [data access](https://neurodata.io/help/access/)
+    - for anything larger see our page on [data access](https://neurodata.io/help/download/)
   - Links to NeuroData's <a href="https://viz.neurodata.io/" target="_blank">Neuroglancer</a>
 - Bookmarklet to navigate from Neuroglancer to a data cutout form with preserved navigation information
 - Exploratory data analysis/visualization
