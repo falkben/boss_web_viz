@@ -504,15 +504,6 @@ def ret_ndviz_urls(request, coll, exp, channels, x=None, y=None, z=None):
         state = neuroglancer.ViewerState()
         state.layout = '4panel'
 
-        # hack to get zbrain atlas overlay
-        layer, name, visible = get_def_layer(exp)
-        if layer is not None:
-            state.layers.append(
-                name=name,
-                layer=layer,
-                visible=visible
-            )
-
         # add in each layer
         visible = True
         skip_chs = 0
@@ -534,6 +525,16 @@ def ret_ndviz_urls(request, coll, exp, channels, x=None, y=None, z=None):
                 **kwargs,
             )
 
+        # hack to get zbrain atlas overlay
+        layer, name = get_def_layer(exp)
+        if layer is not None:
+            state.layers.append(
+                name=name,
+                layer=layer,
+                visible=True,
+                selectedAlpha=.3,
+            )
+
         if set_nav:
             state.voxel_coordinates = [x_mid, y_mid, z_val]
 
@@ -548,18 +549,16 @@ def ret_ndviz_urls(request, coll, exp, channels, x=None, y=None, z=None):
 def get_def_layer(exp):
     layer = None
     name = None
-    visible = None
 
     if exp == 'ZBrain':
         layer = neuroglancer.SegmentationLayer(
             source="precomputed://https://s3.amazonaws.com/zbrain/atlas_owen",
             objectAlpha=0.94,
-            segments=list(range(1, 34))
+            segments=list(range(1, 34)),
         )
         name = 'zbrain_atlas'
-        visible = True
 
-    return layer, name, visible
+    return layer, name
 
 
 def get_def_viz_host(exp):
