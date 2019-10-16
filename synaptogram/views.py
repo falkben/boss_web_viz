@@ -552,7 +552,7 @@ def get_def_layer(exp):
 
     if exp == 'ZBrain':
         layer = neuroglancer.SegmentationLayer(
-            source="precomputed://https://s3.amazonaws.com/zbrain/atlas_owen",
+            source="precomputed://https://zbrain-s3.neurodata.io/atlas_owen",
             objectAlpha=0.94,
             segments=list(range(1, 34)),
         )
